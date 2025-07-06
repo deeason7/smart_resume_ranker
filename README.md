@@ -1,4 +1,4 @@
-# 🚀 Smart Resume Ranker
+# Smart Resume Ranker
 
 An intelligent, end-to-end Applicant Tracking System (ATS) built with Flask and Python. This application uses a sophisticated NLP and machine learning pipeline to automatically rank candidate resumes against job descriptions, helping recruiters identify the most qualified applicants instantly.
 
@@ -6,7 +6,7 @@ The system features a self-improving ranking model that learns from recruiter fe
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
 * **Role-Based Access Control:** Separate, secure workflows for **Recruiters** and **Candidates**.
 * **Synchronous Processing Pipeline:** A clean, easy-to-run architecture where all data processing and ranking happen instantly upon user action.
@@ -24,7 +24,7 @@ The system features a self-improving ranking model that learns from recruiter fe
 
 ---
 
-## 🛠️ Tech Stack & Architecture
+##  Tech Stack & Architecture
 
 This project is built with a modern, professional stack and follows best practices for structure and scalability.
 
@@ -49,7 +49,7 @@ This project is built with a modern, professional stack and follows best practic
 
 ---
 
-## 🚀 Local Setup and Installation
+##  Local Setup and Installation
 
 Follow these steps to get the application running on your local machine.
 
@@ -93,7 +93,7 @@ cp .env.example .env
 
 ---
 
-## 🏃‍♂️ How to Use the Application
+##  How to Use the Application
 
 #### **1. Running the Web Application**
 
@@ -123,7 +123,7 @@ This is a separate, manual step you perform to make the AI smarter.
 
 ---
 
-## 🔮 Future Improvements
+##  Future Improvements
 
 * **Production Database:** Migrate from SQLite to PostgreSQL for better scalability and concurrency.
 * **Asynchronous Processing:** For very high traffic, re-introduce a task queue like Celery and Redis to handle NLP processing in the background.
