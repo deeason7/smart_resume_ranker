@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Available Jobs{% endblock %}
+{% block content %}
+<h2 class="mb-4">Available Job Postings</h2>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form class="d-flex">
+            <input class="form-control me-2" type="search" placeholder="Search by title or keyword..." aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
+    </div>
+</div>
+
+
+{% for job in jobs %}
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between">
+      <div>
+        <h5 class="card-title">{{ job.title }}</h5>
+        <p class="card-subtitle text-muted">Posted on: {{ job.date_created.strftime('%Y-%m-%d') }}</p>
+        <p class="card-text mt-2">{{ job.description|truncate(150) }}</p>
+      </div>
+      <a href="{{ url_for('candidate.apply_for_job', job_id=job.id) }}" class="btn btn-primary align-self-center">Apply Now</a>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-info">There are currently no job postings. Please check back later!</div>
+{% endfor %}
+{% endblock %}
