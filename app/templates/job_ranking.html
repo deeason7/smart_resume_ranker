@@ -4,17 +4,7 @@
 {% block content %}
 <a href="{{ url_for('recruiter.dashboard') }}" class="btn btn-outline-secondary mb-3">&larr; Back to Dashboard</a>
 <h2 class="mb-4">Candidate Rankings for "{{ job.title }}"</h2>
-
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Score Distribution</h5>
-                <canvas id="scoreChart"></canvas>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
+ <div class="col-md-6">
        <div class="card h-100">
             <div class="card-body">
                  <h5 class="card-title">Job Keywords</h5>

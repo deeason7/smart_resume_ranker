@@ -3,6 +3,7 @@
 import os
 from flask import (Blueprint, render_template, session, redirect,
                    url_for, flash, request, current_app)
+from sqlalchemy import or_
 from werkzeug.utils import secure_filename
 
 from app.models import Job, Resume, Application
@@ -22,9 +23,33 @@ ranking_service = RankingService()
 @candidate_bp.route('/jobs')
 @login_required()
 def job_list():
-    """Displays all available job postings for candidates."""
-    jobs = Job.query.order_by(Job.date_created.desc()).all()
-    return render_template('job_list.html', jobs=jobs)
+    """
+    Displays all available job postings, with an optional search filter.
+    The search is case-insensitive and checks both the job title and description.
+    """
+    # Get the search term from the Url query parameters (e.g./ jobs?search = analyst)
+    search_term  = request.args.get('search', '').strip()
+
+    # Start with a base query for all jobs
+    query = Job.query
+
+    # If a search term is provided, add a filter to the query
+    if search_term:
+        # Create a case-insensitive search pattern
+        search_pattern = f"%{search_term}%"
+        # Filter jobs where the title OR the description contains the search term
+        query = query.filter(
+            or_(
+                Job.title.ilike(search_pattern),
+                Job.description.ilike(search_pattern)
+            )
+        )
+
+    # Execute the final query, ordering by the most recent jobs
+    jobs = query.order_by(Job.date_created.desc()).all()
+
+    # Pass the search term back to the template to display it in the search box
+    return render_template('job_list.html', jobs=jobs, search_term=search_term)
 
 
 @candidate_bp.route('/apply/<job_id>', methods=['GET', 'POST'])
@@ -92,3 +117,10 @@ def my_applications():
     applications = Application.query.filter_by(candidate_id=session['user_id']) \
         .order_by(Application.date_applied.desc()).all()
     return render_template('my_applications.html', applications=applications)
+
+@candidate_bp.route('/job/<job_id>')
+@login_required() # Any logged-in user can view the job details
+def job_detail(job_id):
+    """Displays the full details for a single job posting."""
+    job = Job.query.get_or_404(job_id)
+    return render_template('job_detail.html', job=job)
