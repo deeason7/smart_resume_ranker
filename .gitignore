@@ -1,0 +1,26 @@
+# Virtual Environment
+venv/
+.venv/
+
+# Instance Folder (contains database and uploads)
+instance/
+
+# Environment Variables
+.env
+.env.*
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE / Editor specific
+.idea/
+.vscode/
+
+# macOS specific
+.DS_Store
+Project Plan.docx
+Project Plan.docx
+Project Plan.docx

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Available Jobs{% endblock %}
+{% block content %}
+<h2 class="mb-4">Available Job Postings</h2>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form action="{{ url_for('candidate.job_list') }}" method="get" class="d-flex">
+            <input class="form-control me-2" type="search" name="search" placeholder="Search by title or keyword..." value="{{ search_term or '' }}" aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
+    </div>
+</div>
+
+{% for job in jobs %}
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between">
+      <div>
+        <h5 class="card-title">
+            <a href="{{ url_for('candidate.job_detail', job_id=job.id) }}" class="text-decoration-none">{{ job.title }}</a>
+        </h5>
+        <p class="card-subtitle text-muted">Posted on: {{ job.date_created.strftime('%Y-%m-%d') }}</p>
+        <p class="card-text mt-2">{{ job.description|truncate(150) }}</p>
+      </div>
+      <a href="{{ url_for('candidate.apply_for_job', job_id=job.id) }}" class="btn btn-primary align-self-center">Apply Now</a>
+    </div>
+  </div>
+</div>
+{% else %}
+    {% if search_term %}
+        <div class="alert alert-warning">No jobs found matching your search for '<strong>{{ search_term }}</strong>'.</div>
+    {% else %}
+        <div class="alert alert-info">There are currently no job postings. Please check back later!</div>
+    {% endif %}
+{% endfor %}
+{% endblock %}

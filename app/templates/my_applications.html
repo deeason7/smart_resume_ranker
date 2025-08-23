@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}My Applications{% endblock %}
+{% block content %}
+<h2 class="mb-4">My Job Applications</h2>
+<table class="table table-striped table-hover align-middle">
+  <thead>
+    <tr>
+      <th scope="col">Job Title</th>
+      <th scope="col">Date Applied</th>
+      <th scope="col">Match Score</th>
+      <th scope="col">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for app in applications %}
+    <tr>
+      <td>{{ app.job.title }}</td>
+      <td>{{ app.date_applied.strftime('%Y-%m-%d') }}</td>
+      <td>
+        {% if app.final_score is not none %}
+          <span class="badge fs-6 {% if app.final_score >= 0.7 %}bg-success{% elif app.final_score >= 0.4 %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ "%.0f"|format(app.final_score * 100) }}%</span>
+        {% else %}
+          <span class="badge bg-secondary">Processing</span>
+        {% endif %}
+      </td>
+      <td>
+        {% set status_color = 'secondary' %}
+        {% if app.status == 'In Review' %}{% set status_color = 'info text-dark' %}
+        {% elif app.status == 'Accepted' %}{% set status_color = 'success' %}
+        {% elif app.status == 'Declined' %}{% set status_color = 'danger' %}
+        {% endif %}
+        <span class="badge bg-{{ status_color }}">{{ app.status }}</span>
+      </td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="4" class="text-center">You have not applied for any jobs yet. <a href="{{ url_for('candidate.job_list') }}">View available jobs.</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

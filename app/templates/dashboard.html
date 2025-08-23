@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Recruiter Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>Recruiter Dashboard</h2>
+  <a href="{{ url_for('recruiter.post_job') }}" class="btn btn-success">Post New Job</a>
+</div>
+
+<div class="row text-center mb-4">
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h4>Total Jobs Posted</h4>
+            <p class="fs-2 mb-0">{{ jobs|length }}</p>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h4>Total Applicants</h4>
+            <p class="fs-2 mb-0">{{ jobs|map(attribute='applications')|sum(start=[])|length }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="card bg-light mb-4">
+    <div class="card-body text-center">
+        <h5 class="card-title">Improve Your Ranking AI</h5>
+        <p class="card-text">
+            Click the button below to update the ranking model. The AI will learn from the candidates you have 'Accepted' or 'Declined' to improve its accuracy for future rankings.
+        </p>
+        <a href="{{ url_for('recruiter.trigger_retraining') }}" class="btn btn-info">Update Ranking Model</a>
+    </div>
+</div>
+
+
+<h4>Your Job Postings</h4>
+{% for job in jobs %}
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h5 class="card-title">{{ job.title }}</h5>
+        <p class="card-subtitle text-muted mb-0">Posted on: {{ job.date_created.strftime('%Y-%m-%d') }}</p>
+      </div>
+      <div>
+        <span class="badge bg-dark me-2">{{ job.applications|length }} Applicants</span>
+        <a href="{{ url_for('recruiter.job_ranking', job_id=job.id) }}" class="btn btn-primary">View Rankings</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-info">You have not posted any jobs yet.</div>
+{% endfor %}
+{% endblock %}

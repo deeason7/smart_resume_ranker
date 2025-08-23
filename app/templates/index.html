@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Welcome to SmartRanker{% endblock %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3 text-center">
+  <div class="container-fluid py-5">
+    <h1 class="display-5 fw-bold">Welcome to SmartRanker</h1>
+    <p class="fs-4">
+      The intelligent Applicant Tracking System designed to save you time. Our advanced AI ranks candidates based on how well their skills and experience match your job descriptions.
+    </p>
+    <p>Find the perfect fit, faster.</p>
+
+    {% if 'user_id' in session %}
+      {% if session['role'] == 'recruiter' %}
+        <a href="{{ url_for('recruiter.dashboard') }}" class="btn btn-primary btn-lg px-4 gap-3">Go to Dashboard</a>
+      {% else %}
+        <a href="{{ url_for('candidate.job_list') }}" class="btn btn-primary btn-lg px-4 gap-3">View Available Jobs</a>
+      {% endif %}
+    {% else %}
+      <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
+        <a href="{{ url_for('public.login_page') }}" class="btn btn-primary btn-lg px-4 gap-3">Login</a>
+        <a href="{{ url_for('public.signup_page') }}" class="btn btn-outline-secondary btn-lg px-4">Sign Up</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if 'user_id' not in session %}
+<div class="row align-items-md-stretch">
+  <div class="col-md-6 mb-4">
+    <div class="h-100 p-5 text-white bg-dark rounded-3">
+      <h2>For Recruiters</h2>
+      <p>Stop sifting through hundreds of resumes. Post a job, and let our AI provide you with a ranked shortlist of the most qualified candidates.</p>
+    </div>
+  </div>
+  <div class="col-md-6 mb-4">
+    <div class="h-100 p-5 bg-white border rounded-3">
+      <h2>For Candidates</h2>
+      <p>Showcase your skills effectively. Upload your resume and apply for positions, knowing that your qualifications will be fairly and intelligently assessed.</p>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
