@@ -5,6 +5,7 @@ from spacy.matcher import PhraseMatcher
 from datetime import datetime
 import os
 import json
+import textstat
 
 # Document section headings, used for parsing resumes and job descriptions.
 SECTION_HEADINGS = {
@@ -16,19 +17,21 @@ SECTION_HEADINGS = {
     "RESPONSIBILITIES": [r"responsibilities", r"duties", r"what you'll do", r"key responsibilities"],
 }
 
-
 class NLPService:
     """A service for advanced NLP processing of text documents."""
-
     def __init__(self):
         """Loads the spaCy model and initializes the skill matcher."""
         self.nlp = self._load_spacy_model()
         self.skill_patterns = self._load_skill_patterns()
         self.matcher = PhraseMatcher(self.nlp.vocab, attr='LOWER')
-        self.matcher.add("SKILL", self.skill_patterns)
+        if self.skill_patterns:
+            self.matcher.add("SKILL", self.skill_patterns)
 
-    def _load_spacy_model(self):
-        """Loads the spaCy model, downloading it if necessary."""
+    @staticmethod
+    def _load_spacy_model():
+        """
+        Loads the spaCy model, downloading it if necessary.
+        """
         try:
             return spacy.load("en_core_web_md")
         except OSError:
@@ -38,6 +41,7 @@ class NLPService:
 
     def _load_skill_patterns(self) -> list:
         """Loads skill patterns dynamically from an external JSON file."""
+        skills_path = ""
         try:
             current_dir = os.path.dirname(__file__)
             skills_path = os.path.abspath(os.path.join(current_dir, '..', '..', 'skills.json'))
@@ -46,6 +50,7 @@ class NLPService:
 
             all_skills = [skill for category in skills_data.values() for skill in category]
             print(f"INFO: Loaded {len(all_skills)} skills from skills.json")
+            # Use the instance's nlp model to create spaCy doc patterns.
             return [self.nlp.make_doc(text) for text in all_skills]
 
         except FileNotFoundError:
@@ -60,6 +65,50 @@ class NLPService:
         matches = self.matcher(doc)
         skills = {doc[start:end].text.lower() for _, start, end in matches}
         return sorted(list(skills))
+
+    @staticmethod
+    def _extract_stylistic_features(text: str) -> dict:
+        """Calculates stylistic metrics like readability."""
+        if not text or len(text.split()) < 100:
+            return {"readability_score": 0, "readability_level": "N/A"}
+
+        # Calculate score based on the input 'text', not an undefined variable.
+        readability_score = textstat.flesch_reading_ease(text)
+
+        if readability_score > 90:
+            level = "Very Easy"
+        elif readability_score > 70:
+            level = "Easy"
+        elif readability_score > 50:
+            level = "Standard"
+        elif readability_score > 30:
+            level = "Difficult"
+        else:
+            level = "Very Difficult"
+
+        return {
+            "readability_score": round(readability_score, 2),
+            "readability_level": level
+        }
+
+    @staticmethod
+    def _extract_behavioral_metrics(text: str) -> dict:
+        """Finds and counts unique action verbs to score accomplishments."""
+        action_verbs = [
+            'achieved', 'analyzed', 'authored', 'automated', 'budgeted', 'built',
+            'created', 'decreased', 'delivered', 'designed', 'developed', 'directed',
+            'enhanced', 'established', 'executed', 'generated', 'implemented',
+            'improved', 'increased', 'initiated', 'innovated', 'launched', 'led',
+            'managed', 'mentored', 'negotiated', 'optimized', 'orchestrated',
+            'organized', 'oversaw', 'pioneered', 'planned', 'produced',
+            'recommended', 'redesigned', 'reduced', 'researched', 'resolved',
+            'restored', 'saved', 'slashed', 'solved', 'spearheaded', 'streamlined',
+            'supervised', 'trained', 'transformed', 'won'
+        ]
+
+        found = re.findall(r'\b(' + '|'.join(action_verbs) + r')\b', text, re.IGNORECASE)
+        accomplishment_score = len(set(v.lower() for v in found))
+        return {"accomplishment_score": accomplishment_score}
 
     @staticmethod
     def _extract_experience_years(text: str) -> int:
@@ -100,19 +149,19 @@ class NLPService:
         return "Not Found"
 
     def process_document(self, text: str) -> dict:
-        """Performs a full analysis of a document."""
+        """Performs a full analysis of a document, orchestrating all sub-tasks."""
         if not text:
             return {}
 
         doc = self.nlp(text)
+
+        # Sectionizing Logic
         current_section = "HEADER"
         sections = {key: [] for key in SECTION_HEADINGS.keys()}
         sections.update({"HEADER": [], "OTHER": []})
-
         for line in text.split('\n'):
             line = line.strip()
             if not line: continue
-
             matched_section = next(
                 (name for name, patterns in SECTION_HEADINGS.items() if any(re.match(p, line, re.I) for p in patterns)),
                 None)
@@ -120,12 +169,17 @@ class NLPService:
                 current_section = matched_section
             else:
                 sections.get(current_section, sections["OTHER"]).append(line)
-
         raw_sections = {name: "\n".join(lines) for name, lines in sections.items()}
 
-        return {
+        # Feature Extraction
+        processed_data = {
             "skills": ", ".join(self._extract_skills(doc)),
             "experience_years": self._extract_experience_years(text),
             "education_level": self._extract_education_level(text),
             "raw_sections": raw_sections
         }
+
+        processed_data.update(self._extract_stylistic_features(text))
+        processed_data.update(self._extract_behavioral_metrics(text))
+
+        return processed_data

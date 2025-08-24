@@ -59,7 +59,17 @@ def job_ranking(job_id):
 
     applications = Application.query.filter_by(job_id=job_id) \
         .order_by(Application.final_score.desc().nulls_last()).all()
-    return render_template('job_ranking.html', job=job, applications=applications)
+
+    chart_labels = [f"# {i+1} {app.candidate.username}" for i, app in enumerate(applications)]
+    chart_scores = [app.final_score or 0 for app in applications]
+
+    return render_template(
+        'job_ranking.html',
+        job=job,
+        applications=applications,
+        chart_labels=chart_labels,
+        chart_scores=chart_scores
+    )
 
 @recruiter_bp.route('/application/<application_id>/update-status', methods=['POST'])
 @login_required(role="recruiter")

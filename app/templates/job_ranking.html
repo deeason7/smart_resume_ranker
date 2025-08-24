@@ -3,18 +3,29 @@
 
 {% block content %}
 <a href="{{ url_for('recruiter.dashboard') }}" class="btn btn-outline-secondary mb-3">&larr; Back to Dashboard</a>
-<h2 class="mb-4">Candidate Rankings for "{{ job.title }}"</h2>
- <div class="col-md-6">
-       <div class="card h-100">
+<h2 class="mb-2">Candidate Rankings for "{{ job.title }}"</h2>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title text-center">Applicant Score Distribution</h5>
+                <canvas id="scoreChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
             <div class="card-body">
                  <h5 class="card-title">Job Keywords</h5>
                  <p class="text-muted">
-                    {% if job.sectioned_text and job.sectioned_text.skills %}
-                        {% for keyword in job.sectioned_text.skills.split(',') %}
+                    {% set job_skills = job.sectioned_text.get('skills', '') %}
+                    {% if job_skills %}
+                        {% for keyword in job_skills.split(',') %}
                             <span class="badge bg-light text-dark border m-1">{{ keyword.strip() }}</span>
                         {% endfor %}
                     {% else %}
-                        No keywords were extracted for this job.
+                        No keywords extracted for this job.
                     {% endif %}
                 </p>
             </div>
@@ -39,7 +50,7 @@
       <div id="collapse-{{ app.id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ app.id }}" data-bs-parent="#rankingAccordion">
         <div class="accordion-body">
           <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-5">
               <h5>Candidate Profile</h5>
               {% set resume_data = app.resume.sectioned_text or {} %}
               <ul class="list-group">
@@ -47,30 +58,41 @@
                   Experience
                   <span class="badge bg-primary rounded-pill">{{ resume_data.get('experience_years', 'N/A') }} years</span>
                 </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  Readability
+                  <span class="badge bg-secondary rounded-pill">{{ resume_data.get('readability_level', 'N/A') }}</span>
+                   <span class="ms-1" data-bs-toggle="tooltip" title="Based on the Flesch reading ease score. 'Standard' is typical for most documents.">
+                   </span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  Accomplishments
+                  <span class="badge bg-info text-dark rounded-pill">{{ resume_data.get('accomplishment_score', 'N/A') }} action verbs</span>
+                  <span class="ms-1" data-bs-toggle="tooltip" title="The number of unique action verbs (e.g., 'managed', 'developed') found in the resume.">
+                  </span>
+                </li>
+                 <li class="list-group-item">
+                  <strong>Education:</strong>
+                  <span class="badge bg-light text-dark border">{{ resume_data.get('education_level', 'Not Found') }}</span>
+                </li>
                 <li class="list-group-item">
                   <strong>Skills:</strong>
                   <p class="mb-1">
-                    {% if resume_data.get('skills') %}
-                      {% for skill in resume_data.get('skills').split(',') %}
-                        <span class="badge bg-info text-dark m-1">{{ skill.strip() }}</span>
-                      {% endfor %}
+                    {% set resume_skills = resume_data.get('skills', '') %}
+                    {% set job_skills = job.sectioned_text.get('skills', '') %}
+                    {% if resume_skills %}
+                      {{ resume_skills | highlight(job_skills) }}
                     {% else %}
                       <small class="text-muted">No skills extracted.</small>
                     {% endif %}
                   </p>
                 </li>
-                <li class="list-group-item">
-                  <strong>Education Level:</strong>
-                  <p class="mb-1">
-                      <span class="badge bg-light text-dark border">{{ resume_data.get('education_level', 'Not Found') }}</span>
-                  </p>
-                </li>
               </ul>
             </div>
-            <div class="col-md-8">
-              <h5>Resume Text</h5>
+            <div class="col-md-7">
+              <h5>Resume Text (Highlighted)</h5>
               <div class="p-3 bg-light border rounded" style="white-space: pre-wrap; max-height: 400px; overflow-y: auto;">
-                {{ app.resume.extracted_text }}
+                {% set job_skills = job.sectioned_text.get('skills', '') %}
+                {{ app.resume.extracted_text | highlight(job_skills) }}
               </div>
             </div>
           </div>
@@ -96,41 +118,56 @@
 
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // This is a placeholder for fetching data for the analytics chart.
-    // In a real app with API authentication, you'd add a token to the headers.
-    const scoreData = {
-        labels: [{% for app in applications %}'{{ app.candidate.username }}',{% endfor %}],
-        scores: [{% for app in applications %}{{ app.final_score or 0 }},{% endfor %}]
-    };
+    // Enable Bootstrap tooltips for the info icons
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
-    const ctx = document.getElementById('scoreChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: scoreData.labels,
-            datasets: [{
-                label: 'Match Score',
-                data: scoreData.scores.map(s => s * 100), // As percentage
-                backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: {
-                        callback: function(value) { return value + "%" }
+    // Use the data prepared in the Python route, passing it safely with the 'tojson' filter.
+    const chartLabels = {{ chart_labels | tojson }};
+    const chartScores = {{ chart_scores | tojson }};
+
+    // Reverse the arrays so the #1 candidate appears at the top of the chart
+    chartLabels.reverse();
+    chartScores.reverse();
+
+    if (chartScores.length > 0) {
+        const ctx = document.getElementById('scoreChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Match Score',
+                    data: chartScores.map(s => s * 100), // Convert to percentage
+                    backgroundColor: chartScores.map(s => {
+                        if (s >= 0.7) return 'rgba(25, 135, 84, 0.7)';
+                        if (s >= 0.4) return 'rgba(255, 193, 7, 0.7)';
+                        return 'rgba(220, 53, 69, 0.7)';
+                    })
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) { return value + "%" }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
                     }
                 }
             }
-        }
-    });
+        });
+    }
 });
 </script>
 {% endblock %}

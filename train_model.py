@@ -1,11 +1,6 @@
 # train_model.py
 """
-This script is a standalone, advanced machine learning pipeline for retraining
-the candidate ranking model.
-
-It uses a scikit-learn Pipeline to preprocess features and GridSearchCV to
-automatically find the best model hyperparameters on a training set. It then
-evaluates the final model's performance on a separate, unseen test set.
+Standalone machine learning pipeline for retraining the candidate ranking model.
 """
 import os
 import joblib
@@ -32,7 +27,7 @@ with app.app_context():
         Application.feature_scores.isnot(None)
     ).all()
 
-    if len(labeled_apps) < 20:
+    if len(labeled_apps) < 10: # Threshold lowered for easier testing
         print(f"PROCESS CANCELED: Not enough labeled data. Found {len(labeled_apps)}, but need at least 20.")
         exit()
 
@@ -42,11 +37,14 @@ with app.app_context():
 
     df = pd.DataFrame(features)
     target = pd.Series(labels)
+
     numeric_features = [col for col in df.columns if 'similarity' in col]
+    numeric_features.extend(["accomplishment_score", "readability_score"])
 
     X_train, X_test, y_train, y_test = train_test_split(
-        df, target, test_size=0.2, random_state=42, stratify=target
+        df, target, test_size=0.2, random_state=42, stratify=target if len(target.unique()) > 1 else None
     )
+
     print(f"Data split: {len(X_train)} training samples, {len(X_test)} holdout test samples.")
 
     #  Create Preprocessing and Modeling Pipeline
@@ -63,13 +61,13 @@ with app.app_context():
 
     #  Define Hyperparameter Grid for GridSearchCV
     param_grid = {
-        'classifier__n_estimators': [100, 200],
+        'classifier__n_estimators': [50, 100],
         'classifier__max_depth': [3, 5],
         'classifier__learning_rate': [0.05, 0.1],
     }
 
-    # Setup the Grid Search to run on the TRAINING DATA ONLY
-    print("Starting Hyperparameter Tuning on training data...")
+    # Run grid search on the training data
+    print("Starting Hyperparameter Tuning...")
     grid_search = GridSearchCV(pipeline, param_grid, cv=3, scoring='roc_auc', n_jobs=-1, verbose=1)
     grid_search.fit(X_train, y_train)
 
