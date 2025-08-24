@@ -7,18 +7,12 @@ from sqlalchemy import or_
 from werkzeug.utils import secure_filename
 
 from app.models import Job, Resume, Application
-from app.services.nlp_service import NLPService
-from app.services.ranking_service import RankingService
+from app.services.shared_services import nlp_service, ranking_service
 from app.utils.nlp_utils import extract_text_from_file
 from app.helpers import login_required
 from app.extensions import db
 
 candidate_bp = Blueprint('candidate', __name__, url_prefix='/candidate')
-
-# Initialize services needed for these routes
-nlp_service = NLPService()
-ranking_service = RankingService()
-
 
 @candidate_bp.route('/jobs')
 @login_required()

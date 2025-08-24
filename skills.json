@@ -1,0 +1,16 @@
+{
+  "information_technology": [
+    "python", "java", "c++", "javascript", "aws", "azure", "docker",
+    "kubernetes", "react", "angular", "node.js", "django", "flask",
+    "sql", "nosql", "mongodb", "machine learning", "tensorflow", "pytorch",
+    "data analysis", "scikit-learn", "ci/cd", "agile", "scrum"
+  ],
+  "healthcare": [
+    "patient care", "hipaa", "electronic health records", "ehr", "medical terminology",
+    "phlebotomy", "pharmacology", "cpr", "clinical research", "nursing"
+  ],
+  "finance_and_accounting": [
+    "financial modeling", "risk management", "microsoft excel", "quickbooks",
+    "auditing", "bookkeeping", "gaap", "financial analysis", "asset management"
+  ]
+}

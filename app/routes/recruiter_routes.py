@@ -1,21 +1,16 @@
 # app/routes/recruiter_routes.py
-# This file handles all pages and logic specific to the recruiter role
 import os
 import sys
 import subprocess
 from flask import (Blueprint, render_template, session, redirect,
                    url_for, flash, request)
-
 from app.models import Job, Application
-from app.services.nlp_service import NLPService
+from app.services.shared_services import nlp_service
 from app.utils.nlp_utils import preprocess_text
 from app.helpers import login_required
 from app.extensions import db
 
 recruiter_bp = Blueprint('recruiter', __name__, url_prefix='/recruiter')
-
-# Initialize services needed for these routes
-nlp_service = NLPService()
 
 @recruiter_bp.route('/dashboard')
 @login_required(role="recruiter")
@@ -25,11 +20,10 @@ def dashboard():
     jobs = Job.query.filter_by(uploader_id=recruiter_id).order_by(Job.date_created.desc()).all()
     return render_template('dashboard.html', jobs=jobs)
 
-
 @recruiter_bp.route('/post-job', methods=['GET', 'POST'])
 @login_required(role="recruiter")
 def post_job():
-    """Handles the creation and synchronous processing of a new job posting."""
+    """Handles the creation of a new job posting."""
     if request.method == 'POST':
         title = request.form.get('title')
         description = request.form.get('description')
@@ -39,6 +33,7 @@ def post_job():
             return redirect(url_for('recruiter.post_job'))
 
         sectioned_data = nlp_service.process_document(description)
+        # Use the imported function to clean text before database entry
         processed_job_text = preprocess_text(description)
 
         new_job = Job(
@@ -49,11 +44,10 @@ def post_job():
         db.session.add(new_job)
         db.session.commit()
 
-        flash('Your new job has been posted and processed successfully!', 'success')
+        flash('Your new job has been posted successfully!', 'success')
         return redirect(url_for('recruiter.dashboard'))
 
     return render_template('post_job.html')
-
 
 @recruiter_bp.route('/job/<job_id>/ranking')
 @login_required(role="recruiter")
@@ -67,7 +61,6 @@ def job_ranking(job_id):
         .order_by(Application.final_score.desc().nulls_last()).all()
     return render_template('job_ranking.html', job=job, applications=applications)
 
-
 @recruiter_bp.route('/application/<application_id>/update-status', methods=['POST'])
 @login_required(role="recruiter")
 def update_status(application_id):
@@ -80,19 +73,16 @@ def update_status(application_id):
     if new_status in ['Submitted', 'In Review', 'Accepted', 'Declined']:
         application.status = new_status
         db.session.commit()
-        flash(f"Status for candidate {application.candidate.username} updated.", 'success')
+        flash(f"Status for {application.candidate.username} updated.", 'success')
     else:
         flash("Invalid status selected.", 'danger')
 
     return redirect(url_for('recruiter.job_ranking', job_id=application.job_id))
 
-
 @recruiter_bp.route('/retrain-model')
 @login_required(role="recruiter")
 def trigger_retraining():
-    """
-    Triggers the standalone model training script as a background process.
-    """
+    """Triggers the model training script as a background process."""
     python_executable = sys.executable
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
     script_path = os.path.join(project_root, 'train_model.py')
@@ -102,6 +92,5 @@ def trigger_retraining():
         return redirect(url_for('recruiter.dashboard'))
 
     subprocess.Popen([python_executable, script_path])
-
-    flash("Model retraining has been started in the background. It may take several minutes to complete.", 'info')
+    flash("Model retraining started in the background.", 'info')
     return redirect(url_for('recruiter.dashboard'))
