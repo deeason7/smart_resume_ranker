@@ -9,6 +9,11 @@ An intelligent, end-to-end web application built with Flask and Python. The syst
 
 -   **Role-Based User System**: Secure, distinct workflows for **Recruiters** and **Candidates**.
 
+-   **Proactive Candidate Sourcing & Talent Pool**:
+    -   Recruiters can build and manage a **private, modular talent pool** by batch-uploading resumes.
+    -   The system automatically scans this pool for high-scoring **passive candidates** when viewing a new job's applicants.
+    -   Candidate profiles, including extracted names and emails, are automatically created from raw resume text.
+
 -   **Intelligent NLP Pipeline**: A multi-stage pipeline using **spaCy** that performs deep analysis on documents to extract:
     -   **Structured Data**: Years of experience, education level, and key skills.
     -   **Stylistic Analysis**: Calculates text readability using the Flesch reading ease score.
@@ -52,7 +57,6 @@ An intelligent, end-to-end web application built with Flask and Python. The syst
 ## Local Setup and Installation
 
 Follow these steps to get the application running on your local machine.
-
 ### 1. Clone the Repository
 ```bash
 git clone [https://github.com/deeason7/smart_resume_ranker](https://github.com/deeason7/smart_resume_ranker)
