@@ -111,3 +111,28 @@ class RankingService:
             return round(float(probability[0]), 4)
         else:
             return self._get_heuristic_score(features)
+
+    def find_matches_in_pool(self, job: Job, recruiter_id: str, score_threshold: float = 0.5, limit: int = 5) -> list[Resume]:
+        """Scans the talent pool for high-scoring matches for a given job."""
+        # Get IDs of candidates who have already applied for this job.
+        applied_candidate_ids = [app.candidate_id for app in job.applications]
+
+        # Find all resumes in the pool that do not belong to an existing applicant
+        pool_resumes = Resume.query.filter(
+            Resume.source == 'talent_pool',
+            Resume.uploader_id == recruiter_id,
+            Resume.candidate_id.notin_(applied_candidate_ids)
+        ).all()
+
+        matches = []
+        for resume in pool_resumes:
+            features = self.generate_feature_vector(job, resume)
+            score = self.predict_score(features)
+
+            if score >= score_threshold:
+                # Add the score to the resume object temporarily for display
+                resume.score = score
+                matches.append(resume)
+
+        # Sort the matches by score, descending, and return the top N
+        return sorted(matches, key = lambda  r: r.score, reverse=True) [:limit]

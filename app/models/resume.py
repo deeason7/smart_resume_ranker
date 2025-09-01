@@ -19,10 +19,22 @@ class Resume(db.Model):
     sectioned_text = db.Column(db.JSON, nullable=True)
 
     #Foreign Key to link to the User (candidate) who owns the resume
-    candidate_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=False)
+    candidate_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=True)
+
+    # Links ID to the recruiter who uploaded the resume to their talent pool.
+    uploader_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=True)
+
+    #Store the name and email found by the NLP service.
+    extracted_name = db.Column(db.String(255), nullable=True)
+    extracted_email = db.Column(db.String(255), nullable=True)
+
+    # Distinguish between resumes from application vs the talent pool.
+    source = db.Column(db.String(50), nullable=False, default='application')
 
     # Many-to-one relationship with User
-    candidate = db.relationship('User', back_populates='resumes')
+    candidate = db.relationship('User', foreign_keys=[candidate_id], back_populates='resumes')
+
+    uploader = db.relationship('User', foreign_keys=[uploader_id])
 
     def __repr__(self)->str:
         """String representation of the Resume object."""

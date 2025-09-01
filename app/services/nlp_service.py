@@ -148,6 +148,24 @@ class NLPService:
             return "Associate Degree"
         return "Not Found"
 
+    @staticmethod
+    def _extract_contact_info(text: str) -> dict:
+        """Extracts candidate name and email using regex patterns."""
+        contact_info = {"name": None, "email": None}
+
+        # Regex for email
+        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        match = re.search(email_pattern, text)
+        if match:
+            contact_info["email"] = match.group(0)
+
+        # Heuristic for name
+        first_line = text.split('\n')[0].strip()
+        if len(first_line.split()) >= 2 and len(first_line) < 30:
+            contact_info["name"] = first_line
+
+        return contact_info
+
     def process_document(self, text: str) -> dict:
         """Performs a full analysis of a document, orchestrating all sub-tasks."""
         if not text:
@@ -173,6 +191,8 @@ class NLPService:
 
         # Feature Extraction
         processed_data = {
+            "extracted_name": self._extract_contact_info(text).get("name"),
+            "extracted_email": self._extract_contact_info(text).get("email"),
             "skills": ", ".join(self._extract_skills(doc)),
             "experience_years": self._extract_experience_years(text),
             "education_level": self._extract_education_level(text),

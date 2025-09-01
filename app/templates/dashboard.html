@@ -7,32 +7,47 @@
 </div>
 
 <div class="row text-center mb-4">
-    <div class="col-md-6">
-        <div class="card p-3">
+    <div class="col-md-6 mb-3">
+        <div class="card p-3 h-100">
             <h4>Total Jobs Posted</h4>
             <p class="fs-2 mb-0">{{ jobs|length }}</p>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card p-3">
+    <div class="col-md-6 mb-3">
+        <div class="card p-3 h-100">
             <h4>Total Applicants</h4>
             <p class="fs-2 mb-0">{{ jobs|map(attribute='applications')|sum(start=[])|length }}</p>
         </div>
     </div>
 </div>
 
-<div class="card bg-light mb-4">
-    <div class="card-body text-center">
-        <h5 class="card-title">Improve Your Ranking AI</h5>
-        <p class="card-text">
-            Click the button below to update the ranking model. The AI will learn from the candidates you have 'Accepted' or 'Declined' to improve its accuracy for future rankings.
-        </p>
-        <a href="{{ url_for('recruiter.trigger_retraining') }}" class="btn btn-info">Update Ranking Model</a>
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">Improve Your Ranking AI</h5>
+                <p class="card-text">
+                    The AI learns from candidates you have 'Accepted' or 'Declined' to improve its accuracy for future rankings.
+                </p>
+                <a href="{{ url_for('recruiter.trigger_retraining') }}" class="btn btn-info">Update Ranking Model</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">Talent Pool</h5>
+                <p class="card-text">
+                    Build your internal database of candidates. Proactively source talent for new and existing roles.
+                </p>
+                <a href="{{ url_for('recruiter.talent_pool') }}" class="btn btn-secondary">Manage Talent Pool</a>
+            </div>
+        </div>
     </div>
 </div>
 
 
-<h4>Your Job Postings</h4>
+<h4 class="mt-4">Your Job Postings</h4>
 {% for job in jobs %}
 <div class="card mb-3">
   <div class="card-body">

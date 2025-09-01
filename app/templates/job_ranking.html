@@ -62,12 +62,14 @@
                   Readability
                   <span class="badge bg-secondary rounded-pill">{{ resume_data.get('readability_level', 'N/A') }}</span>
                    <span class="ms-1" data-bs-toggle="tooltip" title="Based on the Flesch reading ease score. 'Standard' is typical for most documents.">
+                     &#9432;
                    </span>
                 </li>
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                   Accomplishments
                   <span class="badge bg-info text-dark rounded-pill">{{ resume_data.get('accomplishment_score', 'N/A') }} action verbs</span>
                   <span class="ms-1" data-bs-toggle="tooltip" title="The number of unique action verbs (e.g., 'managed', 'developed') found in the resume.">
+                    &#9432;
                   </span>
                 </li>
                  <li class="list-group-item">
@@ -114,6 +116,25 @@
     <div class="alert alert-info">No applications have been submitted for this job yet.</div>
   {% endfor %}
 </div>
+
+{% if passive_candidates %}
+<hr class="my-5">
+<h3 class="mb-4">Potential Matches from Your Talent Pool</h3>
+<div class="list-group">
+  {% for resume in passive_candidates %}
+    <div class="list-group-item d-flex justify-content-between align-items-center">
+      <div>
+        <h5 class="mb-1">{{ resume.extracted_name or 'Unknown Candidate' }}</h5>
+        <small>{{ resume.extracted_email or 'No email found' }}</small>
+      </div>
+      <div>
+          <span class="badge fs-6 bg-info text-dark">Predicted Match: {{ "%.0f"|format(resume.score * 100) }}%</span>
+          <a href="#" class="btn btn-sm btn-outline-success ms-3">Invite to Apply</a>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
 {% endblock %}
 
 
@@ -121,15 +142,12 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Enable Bootstrap tooltips for the info icons
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
-    // Use the data prepared in the Python route, passing it safely with the 'tojson' filter.
     const chartLabels = {{ chart_labels | tojson }};
     const chartScores = {{ chart_scores | tojson }};
 
-    // Reverse the arrays so the #1 candidate appears at the top of the chart
     chartLabels.reverse();
     chartScores.reverse();
 
@@ -141,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 labels: chartLabels,
                 datasets: [{
                     label: 'Match Score',
-                    data: chartScores.map(s => s * 100), // Convert to percentage
+                    data: chartScores.map(s => s * 100),
                     backgroundColor: chartScores.map(s => {
                         if (s >= 0.7) return 'rgba(25, 135, 84, 0.7)';
                         if (s >= 0.4) return 'rgba(255, 193, 7, 0.7)';

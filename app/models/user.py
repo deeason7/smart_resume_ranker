@@ -20,7 +20,7 @@ class User(db.Model):
     jobs = db.relationship('Job', back_populates='uploader', lazy=True, cascade="all, delete-orphan")
 
     #One-to-many' link where one User (candidate) can have many Resumes.
-    resumes = db.relationship('Resume', back_populates='candidate', lazy=True, cascade="all, delete-orphan")
+    resumes = db.relationship('Resume', foreign_keys='Resume.candidate_id', back_populates='candidate', lazy=True, cascade="all, delete-orphan")
 
     def set_password(self, password: str):
         """Hashes and sets the user's passwords"""
